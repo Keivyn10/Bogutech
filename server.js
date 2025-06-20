@@ -1,12 +1,11 @@
 const express = require('express');
-const { Pool } = require('pg'); // 1. Se importa el paquete 'pg' en lugar de 'sqlite3'
+const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 2. Se conecta usando la URL de Render guardada en las variables de entorno
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
@@ -14,12 +13,10 @@ const pool = new Pool({
     }
 });
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// --- DATOS INICIALES (EXTRAÍDOS DEL EXCEL) ---
 const initialOpportunitiesData = [
     { idOportunidad: 'DealReg-01540', portal: 'NetBrain', pais: 'CR', cliente: 'Banco Popular y de desarrollo Comunal', fechaCreacion: '2025-11-03', fechaExpira: null, montoAproximado: 100000, estatus: 'Pendiente ', comercial: 'Cesar Jimenez', productos: '', descripcion: '' },
     { idOportunidad: '68987', portal: 'Dynatrace', pais: 'GTM', cliente: 'MCDONALDS', fechaCreacion: '2024-01-25', fechaExpira: null, montoAproximado: 0, estatus: 'Rechazada', comercial: 'Luis Roldan', productos: '', descripcion: '' },
@@ -76,11 +73,9 @@ const initialOpportunitiesData = [
     { idOportunidad: 'DR20250528-351283', portal: 'SOPHOS', pais: 'HN', cliente: 'Escuela Agricola Panamericana El Zamorano', fechaCreacion: '2025-05-28', fechaExpira: null, montoAproximado: 0, estatus: 'Pendiente', comercial: 'Estuardo Ramirez', productos: '', descripcion: '' }
 ];
 
-// --- INICIALIZACIÓN DE LA BASE DE DATOS POSTGRESQL ---
 async function initializeDbAndLoadInitialData() {
     const client = await pool.connect();
     try {
-        // 4. Se adapta la creación de tablas para PostgreSQL
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -108,7 +103,6 @@ async function initializeDbAndLoadInitialData() {
             );
         `);
 
-        // Insertar datos iniciales solo si las tablas están vacías
         const users = await client.query('SELECT COUNT(*) FROM users');
         if (users.rows[0].count === '0') {
             console.log("Insertando usuarios iniciales...");
@@ -118,7 +112,6 @@ async function initializeDbAndLoadInitialData() {
                 { username: 'oscar@bogu-tech.com', password: 'Oscar1234', isAdmin: 1 }
             ];
             for (const user of initialUsers) {
-                // 3. La sintaxis de consulta y parámetros cambia a $1, $2, etc.
                 await client.query('INSERT INTO users (username, password, isAdmin) VALUES ($1, $2, $3)', [user.username.toLowerCase(), user.password, user.isAdmin]);
             }
         }
@@ -128,15 +121,12 @@ async function initializeDbAndLoadInitialData() {
             console.log("Insertando datos de ejemplo para opportunities...");
             for(const op of initialOpportunitiesData) {
                 const parseDate = (dateStr) => {
-                    if (!dateStr || dateStr.trim() === '') return null;
-                    // Intenta manejar formato YYYY-MM-DD y DD/MM/YYYY
+                    if (!dateStr || !dateStr.trim()) return null;
                     if (dateStr.includes('/')) {
                         const parts = dateStr.split('/');
-                        if (parts.length === 3) {
-                            return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                        }
+                        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
                     }
-                    return dateStr; 
+                    return dateStr;
                 };
                 
                 await client.query(
@@ -161,18 +151,17 @@ async function initializeDbAndLoadInitialData() {
 
 initializeDbAndLoadInitialData();
 
-// --- API Endpoints ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// LOGIN
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         const result = await pool.query('SELECT username, "isAdmin" FROM users WHERE username = $1 AND password = $2', [username.toLowerCase(), password]);
         if (result.rows.length > 0) {
-            const user = { username: result.rows[0].username, isAdmin: result.rows[0].isadmin };
+            // LÍNEA CORREGIDA: Se usa .isadmin porque node-pg puede devolver los nombres en minúscula
+            const user = { username: result.rows[0].username, isAdmin: result.rows[0].isAdmin };
             res.json({ message: 'Login exitoso', user });
         } else {
             res.status(401).json({ message: 'Usuario o contraseña incorrectos.' });
@@ -182,7 +171,6 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// OPORTUNIDADES (GET)
 app.get('/api/opportunities', async (req, res) => {
     try {
         const result = await pool.query('SELECT *, to_char(fechaCreacion, \'YYYY-MM-DD\') as "fechaCreacion", to_char(fechaExpira, \'YYYY-MM-DD\') as "fechaExpira" FROM opportunities');
@@ -192,7 +180,6 @@ app.get('/api/opportunities', async (req, res) => {
     }
 });
 
-// OPORTUNIDADES (POST)
 app.post('/api/opportunities', async (req, res) => {
     const { idOportunidad, portal, pais, cliente, fechaCreacion, fechaExpira, montoAproximado, currencySymbol, estatus, comercial, productos, descripcion } = req.body;
     try {
@@ -209,8 +196,5 @@ app.post('/api/opportunities', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
-
-// (Aquí irían el resto de tus endpoints adaptados, como createUser, createAdminUser, etc.)
-// ...
 
 app.listen(PORT, () => console.log(`Servidor corriendo en el puerto ${PORT}`));
