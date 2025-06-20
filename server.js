@@ -6,17 +6,25 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// --- CONFIGURACIÓN DE CONEXIÓN DIRECTA PARA RENDER ---
+// Este bloque asume que SIEMPRE se ejecutará en un entorno que proporciona la DATABASE_URL
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false // Esta configuración es REQUERIDA por Render
+  }
 });
 
+// Añadimos un log para depurar y ver si la variable de entorno se está leyendo
+console.log(`Intentando conectar a la base de datos. ¿URL de BD encontrada?: ${process.env.DATABASE_URL ? 'Sí' : 'No, no se encontró la variable DATABASE_URL'}`);
+
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
+// --- DATOS INICIALES (EXTRAÍDOS DEL EXCEL) ---
 const initialOpportunitiesData = [
     { idOportunidad: 'DealReg-01540', portal: 'NetBrain', pais: 'CR', cliente: 'Banco Popular y de desarrollo Comunal', fechaCreacion: '2025-11-03', fechaExpira: null, montoAproximado: 100000, estatus: 'Pendiente ', comercial: 'Cesar Jimenez', productos: '', descripcion: '' },
     { idOportunidad: '68987', portal: 'Dynatrace', pais: 'GTM', cliente: 'MCDONALDS', fechaCreacion: '2024-01-25', fechaExpira: null, montoAproximado: 0, estatus: 'Rechazada', comercial: 'Luis Roldan', productos: '', descripcion: '' },
@@ -83,9 +91,6 @@ async function initializeDbAndLoadInitialData() {
                 password VARCHAR(255) NOT NULL,
                 isAdmin INTEGER DEFAULT 0
             );
-            CREATE TABLE IF NOT EXISTS portals (id SERIAL PRIMARY KEY, name VARCHAR(255) UNIQUE NOT NULL);
-            CREATE TABLE IF NOT EXISTS countries (id SERIAL PRIMARY KEY, name VARCHAR(255) UNIQUE NOT NULL);
-            CREATE TABLE IF NOT EXISTS currencies (id SERIAL PRIMARY KEY, symbol VARCHAR(5) UNIQUE NOT NULL, name VARCHAR(255) NOT NULL);
             CREATE TABLE IF NOT EXISTS opportunities (
                 internalId SERIAL PRIMARY KEY,
                 idOportunidad VARCHAR(255) UNIQUE NOT NULL,
@@ -151,6 +156,7 @@ async function initializeDbAndLoadInitialData() {
 
 initializeDbAndLoadInitialData();
 
+// --- API Endpoints ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -160,7 +166,6 @@ app.post('/api/login', async (req, res) => {
     try {
         const result = await pool.query('SELECT username, "isAdmin" FROM users WHERE username = $1 AND password = $2', [username.toLowerCase(), password]);
         if (result.rows.length > 0) {
-            // LÍNEA CORREGIDA: Se usa .isadmin porque node-pg puede devolver los nombres en minúscula
             const user = { username: result.rows[0].username, isAdmin: result.rows[0].isAdmin };
             res.json({ message: 'Login exitoso', user });
         } else {
@@ -196,5 +201,8 @@ app.post('/api/opportunities', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+// El resto de los endpoints (createUser, createAdminUser, etc.) deben ser adaptados
+// de la misma forma para usar `pool.query` si se quieren utilizar.
 
 app.listen(PORT, () => console.log(`Servidor corriendo en el puerto ${PORT}`));
