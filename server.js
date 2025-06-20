@@ -25,8 +25,10 @@ async function initializeDb() {
     const client = await pool.connect();
     try {
         console.log("Creando tablas en PostgreSQL si no existen...");
+        
         await client.query(`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username VARCHAR(255) UNIQUE NOT NULL, password VARCHAR(255) NOT NULL, "isAdmin" INTEGER DEFAULT 0);`);
         await client.query(`CREATE TABLE IF NOT EXISTS opportunities ("internalId" SERIAL PRIMARY KEY, "idOportunidad" VARCHAR(255) UNIQUE NOT NULL, "portal" VARCHAR(255), "pais" VARCHAR(255), "cliente" VARCHAR(255), "fechaCreacion" DATE, "fechaExpira" DATE, "montoAproximado" NUMERIC(15, 2), "currencySymbol" VARCHAR(5), "estatus" VARCHAR(255), "comercial" VARCHAR(255), "productos" TEXT, "descripcion" TEXT);`);
+        
         console.log("Estructura de tablas verificada.");
     } catch (err) {
         console.error('Error al crear tablas en PostgreSQL:', err.stack);
@@ -57,7 +59,6 @@ app.get('/api/opportunities', async (req, res) => {
     } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// ... Aquí irían el resto de tus endpoints adaptados a PostgreSQL ...
-// Por ahora, nos enfocamos en que el servidor arranque y lea los datos.
+// Aquí irían el resto de tus endpoints adaptados a PostgreSQL...
 
 app.listen(PORT, () => console.log(`Servidor de PRODUCCIÓN corriendo en el puerto ${PORT}`));
