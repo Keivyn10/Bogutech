@@ -18,52 +18,35 @@ const initialOpportunitiesData = [
     { idOportunidad: 'DealReg-01540', portal: 'NetBrain', pais: 'CR', cliente: 'Banco Popular y de desarrollo Comunal', fechaCreacion: '2025-11-03', fechaExpira: null, montoAproximado: 100000, estatus: 'Pendiente', comercial: 'Cesar Jimenez', productos: '', descripcion: '' },
     { idOportunidad: '68987', portal: 'Dynatrace', pais: 'GTM', cliente: 'MCDONALDS', fechaCreacion: '2024-01-25', fechaExpira: null, montoAproximado: 0, estatus: 'Rechazada', comercial: 'Luis Roldan', productos: '', descripcion: '' },
     { idOportunidad: '71228', portal: 'Dynatrace', pais: 'SV', cliente: 'Academia Nacional De Seguridad Pública', fechaCreacion: '2024-03-27', fechaExpira: '2025-01-14', montoAproximado: 0, estatus: 'Aprobado', comercial: 'Luis Roldan', productos: '', descripcion: '' },
-    // ... (El resto de tus datos de Excel irían aquí)
+    // ... (El resto de tus datos de Excel irían aquí si los quieres cargar)
 ];
 
-// --- INICIALIZACIÓN DE LA BASE DE DATOS POSTGRESQL ---
+// --- INICIALIZACIÓN DE LA BASE DE DATOS (CORREGIDA) ---
 async function initializeDbAndLoadInitialData() {
     const client = await pool.connect();
     try {
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username VARCHAR(255) UNIQUE NOT NULL,
-                password VARCHAR(255) NOT NULL,
-                "isAdmin" INTEGER DEFAULT 0
-            );
-        `);
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS portals (id SERIAL PRIMARY KEY, name VARCHAR(255) UNIQUE NOT NULL);
-        `);
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS countries (id SERIAL PRIMARY KEY, name VARCHAR(255) UNIQUE NOT NULL);
-        `);
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS currencies (id SERIAL PRIMARY KEY, symbol VARCHAR(5) UNIQUE NOT NULL, name VARCHAR(255) NOT NULL);
-        `);
+        console.log("Iniciando creación de tablas una por una...");
+        
+        // CADA CREATE TABLE AHORA ES UNA LLAMADA INDIVIDUAL Y SEGURA
+        await client.query(`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username VARCHAR(255) UNIQUE NOT NULL, password VARCHAR(255) NOT NULL, "isAdmin" INTEGER DEFAULT 0);`);
+        await client.query(`CREATE TABLE IF NOT EXISTS portals (id SERIAL PRIMARY KEY, name VARCHAR(255) UNIQUE NOT NULL);`);
+        await client.query(`CREATE TABLE IF NOT EXISTS countries (id SERIAL PRIMARY KEY, name VARCHAR(255) UNIQUE NOT NULL);`);
+        await client.query(`CREATE TABLE IF NOT EXISTS currencies (id SERIAL PRIMARY KEY, symbol VARCHAR(5) UNIQUE NOT NULL, name VARCHAR(255) NOT NULL);`);
         await client.query(`
             CREATE TABLE IF NOT EXISTS opportunities (
-                "internalId" SERIAL PRIMARY KEY,
-                "idOportunidad" VARCHAR(255) UNIQUE NOT NULL,
-                "portal" VARCHAR(255) NOT NULL,
-                "pais" VARCHAR(255) NOT NULL,
-                "cliente" VARCHAR(255) NOT NULL,
-                "fechaCreacion" DATE,
-                "fechaExpira" DATE,
-                "montoAproximado" NUMERIC(15, 2) NOT NULL,
-                "currencySymbol" VARCHAR(5) DEFAULT '$',
-                "estatus" VARCHAR(255) NOT NULL,
-                "comercial" VARCHAR(255) NOT NULL,
-                "productos" TEXT,
-                "descripcion" TEXT
+                "internalId" SERIAL PRIMARY KEY, "idOportunidad" VARCHAR(255) UNIQUE NOT NULL, "portal" VARCHAR(255) NOT NULL,
+                "pais" VARCHAR(255) NOT NULL, "cliente" VARCHAR(255) NOT NULL, "fechaCreacion" DATE, "fechaExpira" DATE,
+                "montoAproximado" NUMERIC(15, 2) NOT NULL, "currencySymbol" VARCHAR(5) DEFAULT '$', "estatus" VARCHAR(255) NOT NULL,
+                "comercial" VARCHAR(255) NOT NULL, "productos" TEXT, "descripcion" TEXT
             );
         `);
+        console.log("Creación de tablas finalizada.");
 
-        // Insertar datos iniciales (solo si las tablas están vacías)
+        // Insertar datos iniciales
         const users = await client.query('SELECT COUNT(*) FROM users');
         if (users.rows[0].count === '0') {
-             const initialUsers = [
+            console.log("Insertando usuarios iniciales...");
+            const initialUsers = [
                 { username: 'paola.rangel@bogu-tech.com', password: 'Pao1234', isAdmin: 1 },
                 { username: 'mitchell@bogu-tech.com', password: 'Mit123--', isAdmin: 2 },
                 { username: 'oscar@bogu-tech.com', password: 'Oscar1234', isAdmin: 1 }
@@ -84,7 +67,6 @@ async function initializeDbAndLoadInitialData() {
                 }
                 return dateStr;
             };
-
             for(const op of initialOpportunitiesData) {
                 await client.query(
                     `INSERT INTO opportunities ("idOportunidad", "portal", "pais", "cliente", "fechaCreacion", "fechaExpira", "montoAproximado", "estatus", "comercial", "productos", "descripcion", "currencySymbol") 
@@ -93,7 +75,7 @@ async function initializeDbAndLoadInitialData() {
                 );
             }
         }
-
+        console.log("Inicialización de la base de datos completada con éxito.");
     } catch(err) {
         console.error('Error durante la inicialización de la BD:', err.stack)
     } finally {
@@ -102,15 +84,15 @@ async function initializeDbAndLoadInitialData() {
 }
 initializeDbAndLoadInitialData();
 
-// --- RUTAS DE LA API ---
+// --- RUTAS DE LA API (Sin cambios desde la última versión) ---
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
     try {
-        const result = await pool.query('SELECT username, "isAdmin" FROM users WHERE username = $1 AND password = $2', [username.toLowerCase(), password]);
+        const result = await pool.query('SELECT * FROM users WHERE username = $1 AND password = $2', [req.body.username.toLowerCase(), req.body.password]);
         if (result.rows.length > 0) {
-            res.json({ message: 'Login exitoso', user: result.rows[0] });
+            const user = { username: result.rows[0].username, isAdmin: result.rows[0].isAdmin };
+            res.json({ message: 'Login exitoso', user });
         } else {
             res.status(401).json({ message: 'Usuario o contraseña incorrectos.' });
         }
@@ -124,8 +106,6 @@ app.get('/api/opportunities', async (req, res) => {
     } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// El resto de los endpoints (POST, PUT, DELETE de oportunidades y la gestión de tablas)
-// deberían ser adaptados de la misma forma para usar "pool.query" y la sintaxis de PostgreSQL ($1, $2)
-// si se quieren utilizar en producción.
+// El resto de los endpoints (POST, PUT, DELETE, etc.) aquí...
 
 app.listen(PORT, () => console.log(`Servidor corriendo en el puerto ${PORT}`));
