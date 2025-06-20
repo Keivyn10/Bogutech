@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Oportunidades - Bogutech</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="loginView" class="auth-container">
+        <div class="header-logo">
+            <img src="bogutech.png" alt="Logo Bogutech">
+        </div>
+        <h1>Iniciar Sesión</h1>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Usuario (Email):</label>
+                <input type="email" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn">Ingresar</button>
+            <p id="loginMessage" class="auth-message hidden"></p>
+        </form>
+        <div class="auth-links">
+            <a id="showCreateUserLink" class="auth-link">¿No tienes cuenta? Crea una aquí</a>
+            <a id="showForgotPasswordLink" class="auth-link">¿Olvidaste tu contraseña?</a>
+        </div>
+    </div>
+
+    <div id="createUserView" class="auth-container hidden">
+        <div class="header-logo">
+            <img src="bogutech.png" alt="Logo Bogutech">
+        </div>
+        <h1>Crear Nueva Cuenta</h1>
+        <form id="createUserForm">
+            <div class="form-group">
+                <label for="newUsername">Nombre de Usuario (Email):</label>
+                <input type="email" id="newUsername" name="newUsername" required>
+            </div>
+            <div class="form-group">
+                <label for="newPassword">Contraseña:</label>
+                <input type="password" id="newPassword" name="newPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirmar Contraseña:</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+            </div>
+            <button type="submit" class="btn">Crear Cuenta</button>
+            <p id="createUserMessage" class="auth-message hidden"></p>
+        </form>
+        <a id="showLoginLink" class="auth-link">¿Ya tienes cuenta? Inicia sesión</a>
+    </div>
+
+    <div id="forgotPasswordView" class="auth-container hidden">
+        <div class="header-logo">
+            <img src="bogutech.png" alt="Logo Bogutech">
+        </div>
+        <h1>Restablecer Contraseña</h1>
+        <form id="forgotPasswordForm">
+            <div class="form-group">
+                <label for="forgotUsername">Ingresa tu Usuario (Email):</label>
+                <input type="email" id="forgotUsername" required>
+            </div>
+            <div class="form-group">
+                <label for="forgotNewPassword">Nueva Contraseña:</label>
+                <input type="password" id="forgotNewPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="forgotConfirmPassword">Confirmar Nueva Contraseña:</label>
+                <input type="password" id="forgotConfirmPassword" required>
+            </div>
+            <button type="submit" class="btn">Restablecer</button>
+            <p id="forgotPasswordMessage" class="auth-message hidden"></p>
+        </form>
+        <a id="backToLoginLink" class="auth-link">Volver a Inicio de Sesión</a>
+    </div>
+
+    <div id="mainAppContainer" class="main-app-container hidden">
+        <div class="app-header">
+            <div class="header-logo">
+                <img src="bogutech.png" alt="Logo Bogutech">
+            </div>
+            <div class="header-actions">
+                <button id="createAdminBtn" class="btn btn-secondary hidden">Crear Admin</button>
+                <button id="showAdminPanelButton" class="btn btn-secondary hidden">Panel Admin</button>
+                <button id="logoutButton" class="btn btn-secondary">Cerrar Sesión</button>
+            </div>
+        </div>
+
+        <div id="listView" class="container">
+            <h1>Sistema de Gestión de Oportunidades</h1>
+            <h2 id="welcomeMessage"></h2>
+            <h2>Listado de Oportunidades</h2>
+
+            <div class="filters-container">
+                <div class="filter-group">
+                    <label for="filterIdOportunidad">ID Oportunidad:</label>
+                    <input type="text" id="filterIdOportunidad" placeholder="Buscar por ID...">
+                </div>
+                <div class="filter-group">
+                    <label for="filterPortal">Portal (Plataforma):</label>
+                    <select id="filterPortal">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filterPais">País:</label>
+                    <select id="filterPais">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filterCliente">Cliente:</label>
+                    <input type="text" id="filterCliente" placeholder="Buscar por cliente...">
+                </div>
+                <div class="filter-group">
+                    <label for="filterEstatus">Estatus:</label>
+                    <select id="filterEstatus">
+                        <option value="">Todos</option>
+                        <option value="Aprobada">Aprobada</option>
+                        <option value="Rechazada">Rechazada</option>
+                        <option value="En Progreso">En Progreso</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Ganada">Ganada</option>
+                        <option value="Perdida">Perdida</option>
+                        <option value="Activo">Activo</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filterComercial">Comercial:</label>
+                    <select id="filterComercial">
+                        <option value="">Todos</option>
+                        <option value="Cesar Jimenez">Cesar Jimenez</option>
+                        <option value="Luis Rodan">Luis Rodan</option>
+                        <option value="Guillermo Dominguez">Guillermo Dominguez</option>
+                        <option value="Mitchel Castillo">Mitchel Castillo</option>
+                        <option value="Eduardo Gonzales">Eduardo Gonzales</option>
+                        <option value="Oscar Garcia">Oscar Garcia</option>
+                        <option value="Jorge Sandoval">Jorge Sandoval</option>
+                        <option value="Francisco Sandoval">Francisco Sandoval</option>
+                        <option value="Alejandra Gonzales">Alejandra Gonzales</option>
+                        <option value="Estuardo Ramirez">Estuardo Ramirez</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="priorityFilter">Prioridad:</label>
+                    <select id="priorityFilter">
+                        <option value="all">Todas</option>
+                        <option value="expiring_soon">Próximas a Vencer</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="sortFilter">Ordenar por:</label>
+                    <select id="sortFilter">
+                        <option value="newest">Más Recientes Primero</option>
+                        <option value="oldest">Más Antiguas Primero</option>
+                        <option value="expiring_soon">Próximas a Vencer</option>
+                    </select>
+                </div>
+                <div class="filters-actions">
+                    <button id="clearFiltersButton" class="btn btn-secondary">Limpiar Filtros</button>
+                </div>
+            </div>
+
+            <button id="showFormButton" class="btn">Registrar Nueva Oportunidad</button>
+
+            <div class="table-container">
+                <table id="opportunitiesTable">
+                    <thead>
+                        <tr>
+                            <th>ID Oportunidad</th>
+                            <th>Productos</th>
+                            <th>Descripción</th>
+                            <th>Portal</th>
+                            <th>País</th>
+                            <th>Cliente</th>
+                            <th>Fecha Creación</th>
+                            <th>Fecha Expira</th>
+                            <th>Monto Aprox.</th>
+                            <th>Días Restantes</th>
+                            <th>Estatus</th>
+                            <th>Comercial a Cargo</th>
+                            <th id="actionsHeader">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="formView" class="container hidden">
+            <h2 id="form-title">Registrar Nueva Oportunidad</h2>
+            <form id="opportunityForm">
+                <input type="hidden" id="opportunityInternalId" name="opportunityInternalId">
+                <div class="form-group">
+                    <label for="idOportunidad">ID de la Oportunidad:</label>
+                    <input type="text" id="idOportunidad" name="idOportunidad" required>
+                </div>
+                <div class="form-group">
+                    <label for="portal">Portal:</label>
+                    <select id="portal" name="portal" required>
+                        <option value="" disabled selected>Seleccione un portal</option>
+                    </select>
+                </div>
+                <div id="dellCiscoFields" class="hidden">
+                    <div class="form-group">
+                        <label for="productos">Productos:</label>
+                        <textarea id="productos" name="productos" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="descripcion">Descripción:</label>
+                        <textarea id="descripcion" name="descripcion" rows="5"></textarea>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="pais">País:</label>
+                    <select id="pais" name="pais" required>
+                        <option value="" disabled selected>Seleccione un país</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="cliente">Cliente:</label>
+                    <input type="text" id="cliente" name="cliente" required>
+                </div>
+                <div class="form-group">
+                    <label for="fechaCreacion">Fecha de Creación:</label>
+                    <input type="date" id="fechaCreacion" name="fechaCreacion" required>
+                </div>
+                <div class="form-group">
+                    <label for="fechaExpira">Fecha que Expira:</label>
+                    <input type="date" id="fechaExpira" name="fechaExpira" required>
+                </div>
+                <div class="form-group">
+                    <label for="montoAproximado">Monto Aproximado:</label>
+                    <div class="currency-input-group">
+                        <select id="currencySymbol" name="currencySymbol" required></select>
+                        <input type="number" id="montoAproximado" name="montoAproximado" step="0.01" required placeholder="0.00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="estatus">Estatus:</label>
+                    <select id="estatus" name="estatus" required>
+                        <option value="">Seleccione un estatus</option>
+                        <option value="Aprobada">Aprobada</option>
+                        <option value="Rechazada">Rechazada</option>
+                        <option value="En Progreso">En Progreso</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Ganada">Ganada</option>
+                        <option value="Perdida">Perdida</option>
+                        <option value="Activo">Activo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="comercial">Comercial a Cargo:</label>
+                    <select id="comercial" name="comercial" required>
+                        <option value="" disabled selected>Seleccione un comercial</option>
+                        <option value="Cesar Jimenez">Cesar Jimenez</option>
+                        <option value="Luis Rodan">Luis Rodan</option>
+                        <option value="Guillermo Dominguez">Guillermo Dominguez</option>
+                        <option value="Mitchel Castillo">Mitchel Castillo</option>
+                        <option value="Eduardo Gonzales">Eduardo Gonzales</option>
+                        <option value="Oscar Garcia">Oscar Garcia</option>
+                        <option value="Jorge Sandoval">Jorge Sandoval</option>
+                        <option value="Francisco Sandoval">Francisco Sandoval</option>
+                        <option value="Alejandra Gonzales">Alejandra Gonzales</option>
+                        <option value="Estuardo Ramirez">Estuardo Ramirez</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Guardar Oportunidad</button>
+                    <button type="button" class="btn btn-danger" onclick="showListViewAnimated()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="adminPanel" class="main-app-container hidden">
+        <div class="app-header">
+            <h1>Panel de Administración</h1>
+            <button id="backToAppButton" class="btn btn-secondary">Volver a la App</button>
+        </div>
+        <div class="management-container">
+            <div class="admin-section">
+                <h2>Gestionar Portales</h2>
+                <form id="portalForm" class="management-form">
+                    <input type="text" id="portalName" placeholder="Nombre del portal..." required>
+                    <button type="submit" class="btn">Agregar</button>
+                </form>
+                <ul id="portalList" class="management-list"></ul>
+            </div>
+            <div class="admin-section">
+                <h2>Gestionar Países</h2>
+                <form id="countryForm" class="management-form">
+                    <input type="text" id="countryName" placeholder="Nombre del país..." required>
+                    <button type="submit" class="btn">Agregar</button>
+                </form>
+                <ul id="countryList" class="management-list"></ul>
+            </div>
+            <div class="admin-section">
+                <h2>Gestionar Monedas</h2>
+                <form id="currencyForm" class="management-form">
+                    <input type="text" id="currencySymbol" placeholder="Símbolo" required>
+                    <input type="text" id="currencyName" placeholder="Nombre de la moneda" required>
+                    <button type="submit" class="btn">Agregar</button>
+                </form>
+                <ul id="currencyList" class="management-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="createAdminModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>Crear Nuevo Administrador</h2>
+            <form id="createAdminForm">
+                <div class="form-group">
+                    <label for="adminUsername">Email del Nuevo Admin:</label>
+                    <input type="email" id="adminUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Contraseña Temporal:</label>
+                    <input type="password" id="adminPassword" required>
+                </div>
+                <div class="form-actions-modal">
+                    <button type="button" id="cancelAdminCreation" class="btn btn-danger">Cancelar</button>
+                    <button type="submit" class="btn">Crear Administrador</button>
+                </div>
+                <p id="createAdminMessage" class="auth-message hidden"></p>
+            </form>
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>

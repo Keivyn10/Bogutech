@@ -1,0 +1,11 @@
+# Archivos de dependencias de Node
+node_modules
+
+# Archivos de entorno (si los tuvieras)
+.env
+
+# Archivos de base de datos local
+/data/opportunities.db
+
+# Registros de npm
+npm-debug.log
