@@ -13,7 +13,7 @@ const pool = new Pool({
   connectionString: `${process.env.DATABASE_URL}?ssl=true`,
 });
 
-// --- DATOS INICIALES (EXTRAÍDOS DEL EXCEL) ---
+// --- DATOS INICIALES ---
 const initialOpportunitiesData = [
     { idOportunidad: 'DealReg-01540', portal: 'NetBrain', pais: 'CR', cliente: 'Banco Popular y de desarrollo Comunal', fechaCreacion: '2025-11-03', fechaExpira: null, montoAproximado: 100000, estatus: 'Pendiente', comercial: 'Cesar Jimenez', productos: '', descripcion: '' },
     { idOportunidad: '68987', portal: 'Dynatrace', pais: 'GTM', cliente: 'MCDONALDS', fechaCreacion: '2024-01-25', fechaExpira: null, montoAproximado: 0, estatus: 'Rechazada', comercial: 'Luis Roldan', productos: '', descripcion: '' },
@@ -25,7 +25,6 @@ const initialOpportunitiesData = [
 async function initializeDbAndLoadInitialData() {
     const client = await pool.connect();
     try {
-        // CORRECCIÓN: Se usan comillas dobles en todos los nombres de columna para evitar ambigüedades.
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -33,6 +32,17 @@ async function initializeDbAndLoadInitialData() {
                 password VARCHAR(255) NOT NULL,
                 "isAdmin" INTEGER DEFAULT 0
             );
+        `);
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS portals (id SERIAL PRIMARY KEY, name VARCHAR(255) UNIQUE NOT NULL);
+        `);
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS countries (id SERIAL PRIMARY KEY, name VARCHAR(255) UNIQUE NOT NULL);
+        `);
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS currencies (id SERIAL PRIMARY KEY, symbol VARCHAR(5) UNIQUE NOT NULL, name VARCHAR(255) NOT NULL);
+        `);
+        await client.query(`
             CREATE TABLE IF NOT EXISTS opportunities (
                 "internalId" SERIAL PRIMARY KEY,
                 "idOportunidad" VARCHAR(255) UNIQUE NOT NULL,
@@ -75,7 +85,6 @@ async function initializeDbAndLoadInitialData() {
                 return dateStr;
             };
 
-            // CORRECCIÓN: La consulta INSERT también usa comillas dobles para coincidir con la creación de la tabla.
             for(const op of initialOpportunitiesData) {
                 await client.query(
                     `INSERT INTO opportunities ("idOportunidad", "portal", "pais", "cliente", "fechaCreacion", "fechaExpira", "montoAproximado", "estatus", "comercial", "productos", "descripcion", "currencySymbol") 
@@ -93,8 +102,7 @@ async function initializeDbAndLoadInitialData() {
 }
 initializeDbAndLoadInitialData();
 
-// --- RUTAS DE LA API (ACTUALIZADAS PARA USAR COMILLAS DOBLES) ---
-
+// --- RUTAS DE LA API ---
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 app.post('/api/login', async (req, res) => {
@@ -116,7 +124,8 @@ app.get('/api/opportunities', async (req, res) => {
     } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// El resto de los endpoints (POST, PUT, DELETE, etc.) también se beneficiarían de usar comillas dobles
-// en los nombres de las columnas para máxima consistencia, pero el código principal de creación ya está corregido.
+// El resto de los endpoints (POST, PUT, DELETE de oportunidades y la gestión de tablas)
+// deberían ser adaptados de la misma forma para usar "pool.query" y la sintaxis de PostgreSQL ($1, $2)
+// si se quieren utilizar en producción.
 
 app.listen(PORT, () => console.log(`Servidor corriendo en el puerto ${PORT}`));
